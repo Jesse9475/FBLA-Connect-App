@@ -1,0 +1,42 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #f7f7f7;
+  color: #222;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+}
+
+input, select, button {
+  display: block;
+  margin: 8px 0;
+  padding: 8px;
+  width: 100%;
+  max-width: 420px;
+}
+
+button {
+  cursor: pointer;
+}
+
+pre {
+  background: #f0f0f0;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.muted {
+  color: #666;
+}
