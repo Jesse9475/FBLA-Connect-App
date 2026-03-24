@@ -4,6 +4,7 @@ from fbla.schemas.common import validate_payload
 from fbla.schemas.payloads import ANNOUNCEMENT_CREATE_SCHEMA, ANNOUNCEMENT_UPDATE_SCHEMA
 from fbla.services.supabase_auth import require_auth
 from fbla.services.supabase_client import get_supabase
+from fbla.api_utils import api_ok, api_error
 
 
 bp = Blueprint("announcements", __name__)
@@ -36,7 +37,7 @@ def announcements_collection():
     if request.method == "GET":
         if is_admin:
             result = supabase.table("announcements").select("*").order("created_at", desc=True).execute()
-            return jsonify({"announcements": result.data})
+            return api_ok(data={"announcements": result.data})
 
         user = supabase.table("users").select("district_id,chapter_id").eq("id", user_id).limit(1).execute()
         user_row = user.data[0] if user.data else {}
@@ -50,23 +51,23 @@ def announcements_collection():
             filters.append(f"and(scope.eq.chapter,chapter_id.eq.{chapter_id})")
         query = supabase.table("announcements").select("*").or_(",".join(filters))
         result = query.order("created_at", desc=True).execute()
-        return jsonify({"announcements": result.data})
+        return api_ok(data={"announcements": result.data})
 
     payload = request.get_json(silent=True) or {}
     ok, cleaned = validate_payload(payload, ANNOUNCEMENT_CREATE_SCHEMA)
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error("invalid_request", status=400, data=cleaned)
 
     if not _is_advisor_or_admin(auth_user):
-        return jsonify({"error": "forbidden"}), 403
+        return api_error("forbidden", status=403)
 
     ok, cleaned = _validate_scope(cleaned)
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error(cleaned.get("error", "invalid_scope"), status=400, data=cleaned)
 
     cleaned["created_by"] = user_id
     result = supabase.table("announcements").insert(cleaned).execute()
-    return jsonify({"announcement": result.data[0] if result.data else cleaned}), 201
+    return api_ok(data={"announcement": result.data[0] if result.data else cleaned}, status=201)
 
 
 @bp.route("/announcements/<announcement_id>", methods=["PATCH", "DELETE"])
@@ -88,14 +89,14 @@ def announcements_detail(announcement_id):
                 .execute()
             )
             if not owned.data:
-                return jsonify({"error": "forbidden"}), 403
+                return api_error("forbidden", status=403)
         supabase.table("announcements").delete().eq("id", announcement_id).execute()
-        return jsonify({"deleted": True})
+        return api_ok(data={"deleted": True}, status=200)
 
     payload = request.get_json(silent=True) or {}
     ok, cleaned = validate_payload(payload, ANNOUNCEMENT_UPDATE_SCHEMA, allow_partial=True)
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error("invalid_request", status=400, data=cleaned)
 
     if not is_admin:
         owned = (
@@ -107,11 +108,11 @@ def announcements_detail(announcement_id):
             .execute()
         )
         if not owned.data:
-            return jsonify({"error": "forbidden"}), 403
+            return api_error("forbidden", status=403)
 
     ok, cleaned = _validate_scope(cleaned)
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error(cleaned.get("error", "invalid_scope"), status=400, data=cleaned)
 
     result = supabase.table("announcements").update(cleaned).eq("id", announcement_id).execute()
-    return jsonify({"announcement": result.data[0] if result.data else cleaned})
+    return api_ok(data={"announcement": result.data[0] if result.data else cleaned}, status=200)

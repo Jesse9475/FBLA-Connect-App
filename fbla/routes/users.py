@@ -4,6 +4,7 @@ from fbla.schemas.common import validate_payload
 from fbla.schemas.payloads import PROFILE_SCHEMA, USER_UPDATE_SCHEMA
 from fbla.services.supabase_auth import require_auth
 from fbla.services.supabase_client import get_supabase
+from fbla.api_utils import api_ok, api_error
 
 
 bp = Blueprint("users", __name__)
@@ -20,41 +21,41 @@ def _can_access_user(user_id):
 @require_auth
 def users_detail(user_id):
     if not _can_access_user(user_id):
-        return jsonify({"error": "forbidden"}), 403
+        return api_error("forbidden", status=403)
 
     supabase = get_supabase()
     if request.method == "GET":
         result = supabase.table("users").select("*").eq("id", user_id).limit(1).execute()
-        return jsonify({"user": result.data[0] if result.data else None})
+        return api_ok(data={"user": result.data[0] if result.data else None})
 
     payload = request.get_json(silent=True) or {}
     ok, cleaned = validate_payload(payload, USER_UPDATE_SCHEMA, allow_partial=True)
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error("invalid_request", status=400, data=cleaned)
 
     result = supabase.table("users").update(cleaned).eq("id", user_id).execute()
-    return jsonify({"user": result.data[0] if result.data else cleaned})
+    return api_ok(data={"user": result.data[0] if result.data else cleaned}, status=200)
 
 
 @bp.route("/profiles/<user_id>", methods=["GET", "PATCH"])
 @require_auth
 def profiles_detail(user_id):
     if not _can_access_user(user_id):
-        return jsonify({"error": "forbidden"}), 403
+        return api_error("forbidden", status=403)
 
     supabase = get_supabase()
     if request.method == "GET":
         result = supabase.table("profiles").select("*").eq("user_id", user_id).limit(1).execute()
-        return jsonify({"profile": result.data[0] if result.data else None})
+        return api_ok(data={"profile": result.data[0] if result.data else None})
 
     payload = request.get_json(silent=True) or {}
     existing = supabase.table("profiles").select("*").eq("user_id", user_id).limit(1).execute()
     ok, cleaned = validate_payload(payload, PROFILE_SCHEMA, allow_partial=bool(existing.data))
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error("invalid_request", status=400, data=cleaned)
     if existing.data:
         result = supabase.table("profiles").update(cleaned).eq("user_id", user_id).execute()
     else:
         result = supabase.table("profiles").insert({"user_id": user_id, **cleaned}).execute()
 
-    return jsonify({"profile": result.data[0] if result.data else cleaned})
+    return api_ok(data={"profile": result.data[0] if result.data else cleaned}, status=200)

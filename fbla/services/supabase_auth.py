@@ -1,8 +1,9 @@
 from functools import wraps
 
 import jwt
-from flask import current_app, g, jsonify, request
+from flask import current_app, g, request
 
+from fbla.api_utils import api_error
 from fbla.services.supabase_client import get_supabase
 from fbla.services.users import get_or_create_user
 
@@ -42,17 +43,17 @@ def require_auth(view_func):
     def wrapper(*args, **kwargs):
         header = request.headers.get("Authorization", "")
         if not header.startswith("Bearer "):
-            return jsonify({"error": "missing_bearer_token"}), 401
+            return api_error("missing_bearer_token", status=401)
 
         token = header.split(" ", 1)[1].strip()
         try:
             decoded = verify_supabase_token(token)
         except Exception:
-            return jsonify({"error": "invalid_token"}), 401
+            return api_error("invalid_token", status=401)
 
         user_id = decoded.get("sub")
         if not user_id:
-            return jsonify({"error": "invalid_token"}), 401
+            return api_error("invalid_token", status=401)
 
         metadata = decoded.get("user_metadata") or {}
         email = decoded.get("email")

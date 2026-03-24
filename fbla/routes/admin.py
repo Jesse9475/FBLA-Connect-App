@@ -5,6 +5,7 @@ from fbla.schemas.payloads import REPORT_SCHEMA
 from fbla.services.supabase_auth import require_auth
 from fbla.services.permissions import require_admin
 from fbla.services.supabase_client import get_supabase
+from fbla.api_utils import api_ok, api_error
 
 
 bp = Blueprint("admin", __name__)
@@ -22,17 +23,17 @@ def reports_collection():
         if not is_admin:
             query = query.eq("reporter_id", user_id)
         result = query.order("created_at", desc=True).execute()
-        return jsonify({"reports": result.data})
+        return api_ok(data={"reports": result.data})
 
     payload = request.get_json(silent=True) or {}
     ok, cleaned = validate_payload(payload, REPORT_SCHEMA)
     if not ok:
-        return jsonify(cleaned), 400
+        return api_error("invalid_request", status=400, data=cleaned)
 
     reporter_id = (g.get("auth") or {}).get("user", {}).get("id")
     cleaned["reporter_id"] = reporter_id
     result = supabase.table("reports").insert(cleaned).execute()
-    return jsonify({"report": result.data[0] if result.data else cleaned}), 201
+    return api_ok(data={"report": result.data[0] if result.data else cleaned}, status=201)
 
 
 @bp.route("/admin/reports", methods=["GET"])
@@ -41,4 +42,4 @@ def reports_collection():
 def admin_reports():
     supabase = get_supabase()
     result = supabase.table("reports").select("*").order("created_at", desc=True).execute()
-    return jsonify({"reports": result.data})
+    return api_ok(data={"reports": result.data})
