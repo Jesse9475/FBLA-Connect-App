@@ -28,5 +28,5 @@ const String kSupabaseAnonKey = String.fromEnvironment(
 /// Example: 'https://fbla-connect-api.onrender.com/api'
 const String kBackendBaseUrl = String.fromEnvironment(
   'BACKEND_URL',
-  defaultValue: 'http://localhost:5050/api',
+  defaultValue: 'https://fblaconnect.onrender.com/api',
 );
