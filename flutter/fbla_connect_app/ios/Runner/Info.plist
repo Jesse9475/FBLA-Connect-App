@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Fbla Connect App</string>
+	<string>FBLA Connect</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,48 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- DEV: allow plain HTTP to localhost / 10.x / 192.168.x / 172.16-31.x /
+	     link-local so the iPhone build can reach the Flask backend running
+	     on your Mac's LAN IP without HTTPS. Flip to an https:// BACKEND_URL
+	     and remove this block before shipping to the App Store. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<!-- Supabase OAuth deep-link callback (used by Google Sign-In via Supabase) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>io.supabase.jbvrhkbeeozbtozcvsof</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.jbvrhkbeeozbtozcvsof</string>
+			</array>
+		</dict>
+	</array>
+	<!--
+	  Scheme queries — all sharing goes through the native iOS share sheet
+	  (UIActivityViewController) so we don't probe custom schemes anymore.
+	  Kept a minimal set for url_launcher usage elsewhere in the app (e.g.
+	  hub resource links, tel/mailto on profile cards).
+	-->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+		<string>twitter</string>
+		<string>mailto</string>
+		<string>tel</string>
+		<string>sms</string>
+	</array>
+	<!--
+	  Photo library write access — required if we ever fall through to
+	  saving the rendered Story image to Photos so the user can upload
+	  it manually from Instagram. (We try the OS share sheet first.)
+	-->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>FBLA Connect saves story-ready images to your photo library so you can post them to Instagram.</string>
 </dict>
 </plist>

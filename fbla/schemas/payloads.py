@@ -4,6 +4,8 @@ AUTH_SESSION_SCHEMA = {
 
 USER_UPDATE_SCHEMA = {
     "display_name": {"type": str, "required": False, "max_length": 80},
+    "first_name": {"type": str, "required": False, "max_length": 80},
+    "last_name": {"type": str, "required": False, "max_length": 80},
     "username": {"type": str, "required": False, "max_length": 30},
     "email": {"type": str, "required": False, "max_length": 120},
     "chapter_id": {"type": str, "required": False, "max_length": 36},
@@ -11,23 +13,30 @@ USER_UPDATE_SCHEMA = {
 }
 
 PROFILE_SCHEMA = {
-    "bio": {"type": str, "required": True, "max_length": 500},
+    "bio": {"type": str, "required": False, "max_length": 500},
     "avatar_url": {"type": str, "required": False, "max_length": 500},
     "grade": {"type": str, "required": False, "max_length": 20},
     "school": {"type": str, "required": False, "max_length": 120},
     "location": {"type": str, "required": False, "max_length": 120},
+    # Interests captured during signup. Optional list of category labels
+    # ("Accounting", "Finance", etc.) that the user has self-identified
+    # with. Stored as a text[] in Postgres.
+    "interests": {"type": list, "required": False, "max_items": 30},
 }
 
 POST_CREATE_SCHEMA = {
-    "caption": {"type": str, "required": True, "max_length": 2000},
+    "caption":   {"type": str, "required": True,  "max_length": 2000},
     "media_url": {"type": str, "required": False, "max_length": 500},
-    "visibility": {"type": str, "required": False, "allowed": ["public", "members"]},
+    # Optional free-text location the author attaches to a post
+    # (e.g. "Conference Hall A"). Capped to keep feed cards tidy.
+    "location":  {"type": str, "required": False, "max_length": 120},
+    # visibility is no longer user-controlled — always auto-set server-side
 }
 
 POST_UPDATE_SCHEMA = {
-    "caption": {"type": str, "required": False, "max_length": 2000},
+    "caption":   {"type": str, "required": False, "max_length": 2000},
     "media_url": {"type": str, "required": False, "max_length": 500},
-    "visibility": {"type": str, "required": False, "allowed": ["public", "members"]},
+    "location":  {"type": str, "required": False, "max_length": 120},
 }
 
 COMMENT_SCHEMA = {
@@ -45,7 +54,15 @@ EVENT_CREATE_SCHEMA = {
     "start_at": {"type": str, "required": True, "max_length": 64},
     "end_at": {"type": str, "required": False, "max_length": 64},
     "location": {"type": str, "required": False, "max_length": 200},
-    "visibility": {"type": str, "required": False, "allowed": ["public", "members"]},
+    "location_image_url": {"type": str, "required": False, "max_length": 500},
+    "place_id": {"type": str, "required": False, "max_length": 200},
+    "registration_deadline": {"type": str, "required": False, "max_length": 64},
+    # Enhanced customization
+    "category":     {"type": str,  "required": False, "max_length": 40},
+    "accent_color": {"type": str,  "required": False, "max_length": 16},
+    "capacity":     {"type": int,  "required": False, "min_value": 1, "max_value": 100000},
+    "tags":         {"type": list, "required": False, "max_items": 10},
+    # visibility auto-set server-side
 }
 
 EVENT_UPDATE_SCHEMA = {
@@ -54,7 +71,13 @@ EVENT_UPDATE_SCHEMA = {
     "start_at": {"type": str, "required": False, "max_length": 64},
     "end_at": {"type": str, "required": False, "max_length": 64},
     "location": {"type": str, "required": False, "max_length": 200},
-    "visibility": {"type": str, "required": False, "allowed": ["public", "members"]},
+    "location_image_url": {"type": str, "required": False, "max_length": 500},
+    "place_id": {"type": str, "required": False, "max_length": 200},
+    "registration_deadline": {"type": str, "required": False, "max_length": 64},
+    "category":     {"type": str,  "required": False, "max_length": 40},
+    "accent_color": {"type": str,  "required": False, "max_length": 16},
+    "capacity":     {"type": int,  "required": False, "min_value": 1, "max_value": 100000},
+    "tags":         {"type": list, "required": False, "max_items": 10},
 }
 
 HUB_CREATE_SCHEMA = {
@@ -62,7 +85,11 @@ HUB_CREATE_SCHEMA = {
     "body": {"type": str, "required": True, "max_length": 6000},
     "category": {"type": str, "required": False, "max_length": 80},
     "file_path": {"type": str, "required": False, "max_length": 500},
-    "visibility": {"type": str, "required": False, "allowed": ["public", "members"]},
+    "url":           {"type": str,  "required": False, "max_length": 500},
+    "resource_type": {"type": str,  "required": False,
+                       "allowed": ["document", "link", "video",
+                                   "study_guide", "sample_test", "template"]},
+    "tags":          {"type": list, "required": False, "max_items": 10},
 }
 
 HUB_UPDATE_SCHEMA = {
@@ -70,7 +97,11 @@ HUB_UPDATE_SCHEMA = {
     "body": {"type": str, "required": False, "max_length": 6000},
     "category": {"type": str, "required": False, "max_length": 80},
     "file_path": {"type": str, "required": False, "max_length": 500},
-    "visibility": {"type": str, "required": False, "allowed": ["public", "members"]},
+    "url":           {"type": str,  "required": False, "max_length": 500},
+    "resource_type": {"type": str,  "required": False,
+                       "allowed": ["document", "link", "video",
+                                   "study_guide", "sample_test", "template"]},
+    "tags":          {"type": list, "required": False, "max_items": 10},
 }
 
 REPORT_SCHEMA = {
@@ -90,7 +121,9 @@ ADVISOR_VERIFY_SCHEMA = {
 ANNOUNCEMENT_CREATE_SCHEMA = {
     "title": {"type": str, "required": True, "max_length": 200},
     "body": {"type": str, "required": True, "max_length": 6000},
-    "scope": {"type": str, "required": True, "allowed": ["national", "district", "chapter"]},
+    # scope, district_id, chapter_id auto-set server-side for advisors;
+    # admins may still pass them explicitly.
+    "scope": {"type": str, "required": False, "allowed": ["national", "district", "chapter"]},
     "district_id": {"type": str, "required": False, "max_length": 36},
     "chapter_id": {"type": str, "required": False, "max_length": 36},
 }

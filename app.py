@@ -18,31 +18,31 @@ if __name__ == "__main__":
             print("Missing deps. Run: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt", file=sys.stderr)
             sys.exit(1)
 
+# ── Load .env BEFORE importing anything from fbla ────────────────────────────
+# `config.py` reads env vars at class-definition time (class attrs like
+# SUPABASE_JWT_SECRET = os.environ.get(...) run the instant the module is
+# imported). If load_dotenv() runs after that import — as it used to, inside
+# create_app() — every Supabase config value is frozen at None, and every
+# authenticated request fails with "invalid_token" + a misleading
+# `jwt_secret_set=False` log line even though the secret is right there in
+# .env. Loading .env here, at the top of the entry script, is the only
+# reliable fix.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+except ImportError:
+    # python-dotenv missing — env vars must come from the real environment.
+    pass
+
 from fbla import create_app
 
 
 app = create_app()
 
-# Use 5001 by default to avoid conflict with macOS AirPlay on port 5000
-PORT = int(os.environ.get("FLASK_RUN_PORT", 5001))
-
-
-def _find_port(start: int, max_tries: int = 10) -> int:
-    import socket
-    for i in range(max_tries):
-        p = start + i
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(("", p))
-                return p
-        except OSError:
-            continue
-    return start  # fallback, will error with a clear message
-
+# Port 5050 — avoids macOS AirPlay (5000), common dev servers (5001/5002),
+# and is consistent with the Flutter app's config.dart default.
+PORT = int(os.environ.get("FLASK_RUN_PORT", 5050))
 
 if __name__ == "__main__":
-    port = _find_port(PORT)
-    if port != PORT:
-        print(f"Port {PORT} in use, using {port} instead.", file=sys.stderr)
-    print(f"FBLA Connect backend → http://0.0.0.0:{port}")
-    app.run(host="0.0.0.0", port=port, debug=app.config.get("DEBUG", False))
+    print(f"FBLA Connect backend → http://localhost:{PORT}/api")
+    app.run(host="0.0.0.0", port=PORT, debug=app.config.get("DEBUG", False))

@@ -1,10 +1,43 @@
-.env
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
-.python-version
+*.pyc
 .venv/
 venv/
-env/
+*.egg-info/
 dist/
-build/
+
+# Secrets & Environment
+.env
+*.env
+.env.*
+
+# macOS
+.DS_Store
+*.swp
+
+# Databases
+*.sqlite3
+*.db
+
+# Flutter / Dart
+flutter/fbla_connect_app/build/
+flutter/fbla_connect_app/.dart_tool/
+flutter/fbla_connect_app/.flutter-plugins
+flutter/fbla_connect_app/.flutter-plugins-dependencies
+*.g.dart
+.pub-cache/
+pubspec.lock
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+
+# Android
+android/.gradle/
+android/app/build/
+
+# IDE
+*.iml
+.idea/

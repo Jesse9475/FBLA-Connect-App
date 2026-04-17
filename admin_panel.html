@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FBLA Connect — Admin & Advisor Panel</title>
+<style>
+  :root {
+    --primary: #1a2a5e;
+    --primary-light: #2a3d8f;
+    --primary-dark: #111d42;
+    --accent: #f5c518;
+    --accent-hover: #e0b010;
+    --bg: #f0f2f7;
+    --surface: #ffffff;
+    --surface-2: #f8f9fc;
+    --border: #e2e6ef;
+    --text: #1a1d2e;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --info: #3b82f6;
+    --sidebar-width: 240px;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(26,42,94,.08);
+    --shadow-md: 0 4px 20px rgba(26,42,94,.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+  }
+
+  /* ── Sidebar ─────────────────────────────────────────── */
+  #sidebar {
+    width: var(--sidebar-width);
+    background: var(--primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 22px 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+
+  .logo-badge {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: var(--primary);
+    flex-shrink: 0;
+  }
+
+  .logo-text { color: white; }
+  .logo-text .title { font-weight: 700; font-size: 15px; line-height: 1.2; }
+  .logo-text .sub { font-size: 11px; color: rgba(255,255,255,.55); margin-top: 2px; }
+
+  .nav-section-label {
+    padding: 18px 20px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,.35);
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    color: rgba(255,255,255,.7);
+    cursor: pointer;
+    border-radius: 0;
+    font-size: 14px;
+    transition: background .15s, color .15s;
+    user-select: none;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.07); color: white; }
+  .nav-item.active {
+    background: rgba(245,197,24,.12);
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .nav-item .icon { font-size: 17px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent);
+    color: var(--primary);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 20px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,.1);
+  }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+  }
+  .user-avatar {
+    width: 34px; height: 34px;
+    background: var(--primary-light);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .user-info .name { font-size: 13px; font-weight: 600; color: white; }
+  .user-info .role { font-size: 11px; color: rgba(255,255,255,.45); text-transform: capitalize; }
+
+  .logout-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 9px;
+    background: rgba(255,255,255,.07);
+    border: none; border-radius: 8px;
+    color: rgba(255,255,255,.7);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .logout-btn:hover { background: rgba(255,255,255,.14); color: white; }
+
+  /* ── Main content ─────────────────────────────────────── */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; color: var(--text); }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px;
+  }
+
+  /* ── Login screen ─────────────────────────────────────── */
+  #login-screen {
+    position: fixed; inset: 0;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    width: 380px;
+    box-shadow: var(--shadow-md);
+  }
+
+  .login-logo {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+  }
+  .login-logo-badge {
+    width: 52px; height: 52px;
+    background: var(--primary);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 19px; color: var(--accent);
+  }
+  .login-logo-text .t { font-size: 20px; font-weight: 800; color: var(--primary); }
+  .login-logo-text .s { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  .login-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .login-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+
+  /* ── Form elements ────────────────────────────────────── */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 6px; color: var(--text);
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    transition: border-color .15s, box-shadow .15s;
+    font-family: inherit;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(26,42,94,.1);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+
+  /* ── Buttons ──────────────────────────────────────────── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    border-radius: 8px; border: none;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, transform .1s, opacity .15s;
+    text-decoration: none;
+    user-select: none;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--primary); color: white;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--primary-light); }
+
+  .btn-accent {
+    background: var(--accent); color: var(--primary);
+  }
+  .btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+
+  .btn-danger {
+    background: var(--danger); color: white;
+  }
+  .btn-danger:hover:not(:disabled) { background: var(--danger-hover); }
+
+  .btn-ghost {
+    background: transparent; color: var(--text-muted);
+    border: 1.5px solid var(--border);
+  }
+  .btn-ghost:hover:not(:disabled) { background: var(--bg); color: var(--text); }
+
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; }
+  .btn-lg { padding: 12px 22px; font-size: 15px; }
+
+  /* ── Cards ────────────────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-size: 15px; font-weight: 700; }
+  .card-body { padding: 20px; }
+
+  /* ── Stat cards ───────────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+  .stat-icon { font-size: 26px; margin-bottom: 10px; }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--primary); }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+
+  /* ── Table ────────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--border);
+    background: var(--surface-2);
+  }
+  td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface-2); }
+
+  .truncate { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ── Badges ───────────────────────────────────────────── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-green { background: #d1fae5; color: #065f46; }
+  .badge-yellow { background: #fef3c7; color: #92400e; }
+  .badge-red { background: #fee2e2; color: #991b1b; }
+  .badge-gray { background: #f3f4f6; color: #374151; }
+  .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+  /* ── Modal ────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(17,29,66,.5);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 500;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    width: 520px;
+    max-width: 95vw;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; }
+  .modal-close {
+    width: 30px; height: 30px;
+    border: none; background: var(--bg);
+    border-radius: 8px; cursor: pointer;
+    font-size: 16px; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .modal-close:hover { background: var(--border); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer {
+    padding: 14px 24px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* ── Toast ────────────────────────────────────────────── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 9999;
+  }
+  .toast {
+    background: white;
+    border-radius: 10px;
+    padding: 13px 18px;
+    box-shadow: var(--shadow-md);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex; align-items: center; gap: 10px;
+    animation: toastIn .25s ease;
+    max-width: 340px;
+    border-left: 4px solid var(--success);
+  }
+  .toast.error { border-left-color: var(--danger); }
+  .toast.warning { border-left-color: var(--warning); }
+  @keyframes toastIn {
+    from { transform: translateX(40px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ── Section pages ────────────────────────────────────── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .page-header h2 { font-size: 22px; font-weight: 800; }
+  .page-header p { font-size: 14px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── Empty state ──────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── Invite code display ──────────────────────────────── */
+  .code-display {
+    background: var(--primary);
+    color: var(--accent);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    padding: 16px 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 12px 0;
+    cursor: pointer;
+    user-select: all;
+  }
+
+  /* ── Spinner ──────────────────────────────────────────── */
+  .spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
+  }
+  .spinner.dark {
+    border-color: rgba(26,42,94,.2);
+    border-top-color: var(--primary);
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Two-col layout ───────────────────────────────────── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  /* ── App hidden class ─────────────────────────────────── */
+  .hidden { display: none !important; }
+
+  /* ── Login error ──────────────────────────────────────── */
+  .error-msg {
+    background: #fee2e2; border: 1px solid #fca5a5;
+    color: #991b1b; border-radius: 8px;
+    padding: 10px 14px; font-size: 13px; margin-top: 12px;
+  }
+
+  /* ── Datetime helper ──────────────────────────────────── */
+  input[type="datetime-local"] { padding: 9px 14px; }
+
+  /* ── Confirm delete pill ──────────────────────────────── */
+  .confirm-row { display: flex; gap: 8px; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-badge">FC</div>
+      <div class="login-logo-text">
+        <div class="t">FBLA Connect</div>
+        <div class="s">Admin & Advisor Panel</div>
+      </div>
+    </div>
+    <h2>Sign in</h2>
+    <p>Use your FBLA Connect credentials (advisor or admin account)</p>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="login-email" placeholder="you@school.edu" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div id="login-error" class="hidden"></div>
+    <button class="btn btn-accent btn-full btn-lg" style="margin-top:8px" onclick="doLogin()" id="login-btn">
+      Sign In
+    </button>
+    <p style="text-align:center;font-size:12px;color:var(--text-light);margin-top:14px">
+      Connected to Flask backend at <strong>localhost:5050</strong>
+    </p>
+  </div>
+</div>
+
+<!-- App shell -->
+<div id="app" class="hidden" style="display:flex;width:100%;height:100vh;">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-badge">FC</div>
+      <div class="logo-text">
+        <div class="title">FBLA Connect</div>
+        <div class="sub">Admin Panel</div>
+      </div>
+    </div>
+
+    <div class="nav-section-label">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+
+    <div class="nav-section-label">Content</div>
+    <div class="nav-item" onclick="showPage('posts')">
+      <span class="icon">📝</span> Posts
+      <span class="nav-badge" id="badge-posts">—</span>
+    </div>
+    <div class="nav-item" onclick="showPage('announcements')">
+      <span class="icon">📢</span> Announcements
+      <span class="nav-badge" id="badge-announcements">—</span>
+    </div>
+    <div class="nav-item" onclick="showPage('events')">
+      <span class="icon">📅</span> Events
+      <span class="nav-badge" id="badge-events">—</span>
+    </div>
+    <div class="nav-item" onclick="showPage('hub')">
+      <span class="icon">📚</span> Hub Items
+      <span class="nav-badge" id="badge-hub">—</span>
+    </div>
+
+    <div class="nav-section-label">Management</div>
+    <div class="nav-item" onclick="showPage('users')">
+      <span class="icon">👥</span> Members
+      <span class="nav-badge" id="badge-users">—</span>
+    </div>
+    <div class="nav-item" onclick="showPage('invites')" id="nav-invites">
+      <span class="icon">🔑</span> Invite Codes
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar" id="sidebar-avatar">?</div>
+        <div class="user-info">
+          <div class="name" id="sidebar-name">Loading...</div>
+          <div class="role" id="sidebar-role">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">⎋  Sign out</button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </div>
+    <div class="content-area" id="content-area">
+
+      <!-- Dashboard page -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value" id="stat-posts">—</div><div class="stat-label">Posts</div></div>
+          <div class="stat-card"><div class="stat-icon">📢</div><div class="stat-value" id="stat-announcements">—</div><div class="stat-label">Announcements</div></div>
+          <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="stat-events">—</div><div class="stat-label">Events</div></div>
+          <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-value" id="stat-hub">—</div><div class="stat-label">Hub Items</div></div>
+          <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="stat-users">—</div><div class="stat-label">Members</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Posts</span>
+            <button class="btn btn-ghost btn-sm" onclick="showPage('posts')">View all →</button>
+          </div>
+          <div class="table-wrap">
+            <table id="dash-posts-table">
+              <thead><tr><th>Caption</th><th>Visibility</th><th>Likes</th><th>Date</th></tr></thead>
+              <tbody id="dash-posts-body"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Posts page -->
+      <div class="page" id="page-posts">
+        <div class="page-header">
+          <div><h2>Posts</h2><p>Create and manage member posts</p></div>
+          <button class="btn btn-accent" onclick="openModal('new-post')">＋ New Post</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Caption</th><th>Visibility</th><th>Likes</th><th>Created</th><th></th></tr></thead>
+              <tbody id="posts-body"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcements page -->
+      <div class="page" id="page-announcements">
+        <div class="page-header">
+          <div><h2>Announcements</h2><p>Broadcast messages to chapters, districts, or all members</p></div>
+          <button class="btn btn-accent" onclick="openModal('new-announcement')">＋ New Announcement</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Title</th><th>Body</th><th>Scope</th><th>Created</th><th></th></tr></thead>
+              <tbody id="announcements-body"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Events page -->
+      <div class="page" id="page-events">
+        <div class="page-header">
+          <div><h2>Events</h2><p>Manage chapter and district events</p></div>
+          <button class="btn btn-accent" onclick="openModal('new-event')">＋ New Event</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Title</th><th>Location</th><th>Starts</th><th>Visibility</th><th></th></tr></thead>
+              <tbody id="events-body"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hub page -->
+      <div class="page" id="page-hub">
+        <div class="page-header">
+          <div><h2>Hub Items</h2><p>Resources, guides, and templates for members</p></div>
+          <button class="btn btn-accent" onclick="openModal('new-hub')">＋ New Resource</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Title</th><th>Category</th><th>URL</th><th>Visibility</th><th></th></tr></thead>
+              <tbody id="hub-body"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users page -->
+      <div class="page" id="page-users">
+        <div class="page-header">
+          <div><h2>Members</h2><p>View and manage all registered members</p></div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Display Name</th><th>Email</th><th>Role</th><th>Chapter</th><th>Joined</th></tr></thead>
+              <tbody id="users-body"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invite codes page -->
+      <div class="page" id="page-invites">
+        <div class="page-header">
+          <div><h2>Advisor Invite Codes</h2><p>Generate single-use codes for advisor onboarding</p></div>
+          <button class="btn btn-accent" onclick="generateInvite()" id="gen-invite-btn">🔑 Generate Code</button>
+        </div>
+        <div id="invite-result" class="hidden card" style="margin-bottom:20px">
+          <div class="card-header"><span class="card-title">New Invite Code</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">Click to copy. Share this code with the advisor — it can only be used once.</p>
+            <div class="code-display" id="invite-code-display" onclick="copyInviteCode()" title="Click to copy"></div>
+            <p style="font-size:12px;color:var(--text-light);margin-top:6px;text-align:center" id="invite-expires"></p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <p style="font-size:14px;color:var(--text-muted);line-height:1.6">
+              Invite codes grant advisor privileges to new users during signup. Each code is single-use and expires after 7 days by default.
+              Advisors can post announcements, create events, and manage chapter content.
+            </p>
+            <div style="margin-top:16px;background:var(--surface-2);border-radius:8px;padding:14px;font-size:13px;color:var(--text-muted);">
+              <strong>Demo code:</strong> <code style="font-family:monospace;background:var(--primary);color:var(--accent);padding:2px 8px;border-radius:4px">ADVISOR2026</code>
+              — pre-seeded for testing the signup flow.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+
+<!-- New Post -->
+<div class="modal-overlay" id="modal-new-post">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Post</span>
+      <button class="modal-close" onclick="closeModal('new-post')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Caption <span style="color:var(--danger)">*</span></label>
+        <textarea class="form-textarea" id="np-caption" placeholder="What's on your mind?" style="min-height:100px"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image URL (optional)</label>
+        <input class="form-input" type="url" id="np-image" placeholder="https://...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Visibility</label>
+        <select class="form-select" id="np-visibility">
+          <option value="public">Public</option>
+          <option value="members">Members only</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-post')">Cancel</button>
+      <button class="btn btn-accent" onclick="submitPost()">Publish Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Announcement -->
+<div class="modal-overlay" id="modal-new-announcement">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Announcement</span>
+      <button class="modal-close" onclick="closeModal('new-announcement')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title <span style="color:var(--danger)">*</span></label>
+        <input class="form-input" id="na-title" placeholder="Announcement title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Body <span style="color:var(--danger)">*</span></label>
+        <textarea class="form-textarea" id="na-body" placeholder="Announcement body…" style="min-height:100px"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Scope</label>
+        <select class="form-select" id="na-scope" onchange="updateScopeFields()">
+          <option value="national">National</option>
+          <option value="district">District</option>
+          <option value="chapter">Chapter</option>
+        </select>
+      </div>
+      <div id="na-district-row" class="form-group hidden">
+        <label class="form-label">District ID</label>
+        <input class="form-input" id="na-district" placeholder="e.g. CA-N">
+      </div>
+      <div id="na-chapter-row" class="form-group hidden">
+        <label class="form-label">Chapter ID</label>
+        <input class="form-input" id="na-chapter" placeholder="e.g. CA-N-001">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-select" id="na-priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-announcement')">Cancel</button>
+      <button class="btn btn-accent" onclick="submitAnnouncement()">Send Announcement</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Event -->
+<div class="modal-overlay" id="modal-new-event">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Event</span>
+      <button class="modal-close" onclick="closeModal('new-event')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title <span style="color:var(--danger)">*</span></label>
+        <input class="form-input" id="ne-title" placeholder="Event title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="ne-desc" placeholder="Event description…"></textarea>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Start Date/Time <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" type="datetime-local" id="ne-start">
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Date/Time</label>
+          <input class="form-input" type="datetime-local" id="ne-end">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location</label>
+        <input class="form-input" id="ne-location" placeholder="e.g. Room 204 or Virtual">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="ne-category">
+          <option value="meeting">Meeting</option>
+          <option value="competition">Competition</option>
+          <option value="community">Community Service</option>
+          <option value="workshop">Workshop</option>
+          <option value="conference">Conference</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Visibility</label>
+        <select class="form-select" id="ne-visibility">
+          <option value="public">Public</option>
+          <option value="members">Members only</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-event')">Cancel</button>
+      <button class="btn btn-accent" onclick="submitEvent()">Create Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Hub Item -->
+<div class="modal-overlay" id="modal-new-hub">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Hub Resource</span>
+      <button class="modal-close" onclick="closeModal('new-hub')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Title <span style="color:var(--danger)">*</span></label>
+        <input class="form-input" id="nh-title" placeholder="Resource title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" id="nh-desc" placeholder="What is this resource?"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL / Link</label>
+        <input class="form-input" type="url" id="nh-url" placeholder="https://...">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="nh-category">
+            <option value="template">Template</option>
+            <option value="guide">Guide</option>
+            <option value="study">Study Material</option>
+            <option value="handbook">Handbook</option>
+            <option value="video">Video</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <select class="form-select" id="nh-visibility">
+            <option value="public">Public</option>
+            <option value="members">Members only</option>
+            <option value="private">Private</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('new-hub')">Cancel</button>
+      <button class="btn btn-accent" onclick="submitHub()">Add Resource</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────
+const SUPABASE_URL   = 'https://jbvrhkbeeozbtozcvsof.supabase.co';
+const SUPABASE_ANON  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpidnJoa2JlZW96YnRvemN2c29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAwODE3NTgsImV4cCI6MjA4NTY1Nzc1OH0.9UKjQVpngBJ5uYzc-wZx5pp-rmr_P8QGd3XDoMwP5Dk';
+const API_BASE       = 'http://localhost:5050/api';
+
+let authToken = null;
+let currentUser = null;
+
+// ── Auth helpers ────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+
+  if (!email || !password) {
+    showLoginError('Please enter your email and password.');
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Signing in…';
+  btn.disabled = true;
+  errEl.classList.add('hidden');
+
+  try {
+    // 1. Authenticate with Supabase directly
+    const sbRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON },
+      body: JSON.stringify({ email, password })
+    });
+    const sbData = await sbRes.json();
+    if (!sbRes.ok) {
+      throw new Error(sbData.error_description || sbData.msg || 'Invalid email or password');
+    }
+
+    const supabaseToken = sbData.access_token;
+
+    // 2. Create Flask session
+    const flaskRes = await fetch(`${API_BASE}/auth/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseToken}` },
+      body: JSON.stringify({ token: supabaseToken })
+    });
+    const flaskData = await flaskRes.json();
+    if (!flaskRes.ok) {
+      throw new Error(flaskData.error || 'Backend session error');
+    }
+
+    const user = flaskData.data?.user || flaskData.user || {};
+    const role = user.role || '';
+
+    if (role !== 'admin' && role !== 'advisor') {
+      throw new Error('Access denied — admin or advisor account required.');
+    }
+
+    authToken = supabaseToken;
+    currentUser = user;
+
+    // Update sidebar UI
+    const initials = (user.display_name || user.email || '?').slice(0, 2).toUpperCase();
+    document.getElementById('sidebar-avatar').textContent = initials;
+    document.getElementById('sidebar-name').textContent = user.display_name || user.email || 'User';
+    document.getElementById('sidebar-role').textContent = role;
+
+    // Hide invite codes nav for non-admin
+    if (role !== 'admin') {
+      document.getElementById('nav-invites').classList.add('hidden');
+    }
+
+    // Show app
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('app').style.display = 'flex';
+
+    // Load data
+    await loadAll();
+
+  } catch (err) {
+    showLoginError(err.message || 'Login failed. Is the backend running?');
+  } finally {
+    btn.innerHTML = 'Sign In';
+    btn.disabled = false;
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  el.className = 'error-msg';
+}
+
+function doLogout() {
+  authToken = null;
+  currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').classList.add('hidden');
+}
+
+// Allow Enter key on password
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('login-email').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('login-password').focus();
+  });
+});
+
+// ── API helper ──────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(`${API_BASE}${path}`, opts);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || json.message || `HTTP ${res.status}`);
+  return json.data ?? json;
+}
+
+// ── Load all data ───────────────────────────────────────────────
+let cache = { posts: [], announcements: [], events: [], hub: [], users: [] };
+
+async function loadAll() {
+  await Promise.allSettled([
+    loadPosts(), loadAnnouncements(), loadEvents(), loadHub(), loadUsers()
+  ]);
+  renderDashboard();
+}
+
+async function loadPosts() {
+  try {
+    const d = await api('GET', '/posts');
+    cache.posts = d.posts || [];
+    renderPosts();
+  } catch(e) { showToast('Could not load posts: ' + e.message, 'error'); }
+}
+
+async function loadAnnouncements() {
+  try {
+    const d = await api('GET', '/announcements');
+    cache.announcements = d.announcements || [];
+    renderAnnouncements();
+  } catch(e) { showToast('Could not load announcements: ' + e.message, 'error'); }
+}
+
+async function loadEvents() {
+  try {
+    const d = await api('GET', '/events');
+    cache.events = d.events || [];
+    renderEvents();
+  } catch(e) { showToast('Could not load events: ' + e.message, 'error'); }
+}
+
+async function loadHub() {
+  try {
+    const d = await api('GET', '/hub');
+    cache.hub = d.hub_items || [];
+    renderHub();
+  } catch(e) { showToast('Could not load hub: ' + e.message, 'error'); }
+}
+
+async function loadUsers() {
+  // The /users endpoint requires a specific user ID. We'll use Supabase directly.
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?select=*&order=created_at.desc`, {
+      headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${authToken}` }
+    });
+    if (res.ok) {
+      cache.users = await res.json();
+    }
+    renderUsers();
+  } catch(e) { /* silent */ }
+}
+
+// ── Render helpers ──────────────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function visBadge(v) {
+  const map = { public: 'badge-green', members: 'badge-blue', private: 'badge-gray' };
+  return `<span class="badge ${map[v] || 'badge-gray'}">${v||'—'}</span>`;
+}
+
+function roleBadge(r) {
+  const map = { admin: 'badge-red', advisor: 'badge-purple', member: 'badge-blue' };
+  return `<span class="badge ${map[r] || 'badge-gray'}">${r||'—'}</span>`;
+}
+
+function scopeBadge(s) {
+  const map = { national: 'badge-red', district: 'badge-yellow', chapter: 'badge-blue' };
+  return `<span class="badge ${map[s] || 'badge-gray'}">${s||'—'}</span>`;
+}
+
+// ── Dashboard ───────────────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('stat-posts').textContent         = cache.posts.length;
+  document.getElementById('stat-announcements').textContent = cache.announcements.length;
+  document.getElementById('stat-events').textContent        = cache.events.length;
+  document.getElementById('stat-hub').textContent           = cache.hub.length;
+  document.getElementById('stat-users').textContent         = cache.users.length;
+
+  document.getElementById('badge-posts').textContent         = cache.posts.length;
+  document.getElementById('badge-announcements').textContent = cache.announcements.length;
+  document.getElementById('badge-events').textContent        = cache.events.length;
+  document.getElementById('badge-hub').textContent           = cache.hub.length;
+  document.getElementById('badge-users').textContent         = cache.users.length;
+
+  const recent = cache.posts.slice(0, 6);
+  const tbody = document.getElementById('dash-posts-body');
+  if (!recent.length) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="emoji">📝</div><p>No posts yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = recent.map(p => `
+    <tr>
+      <td class="truncate">${esc(p.caption || p.body || '(no text)')}</td>
+      <td>${visBadge(p.visibility)}</td>
+      <td>${p.like_count ?? p.likes ?? 0}</td>
+      <td>${fmtDate(p.created_at)}</td>
+    </tr>`).join('');
+}
+
+// ── Posts ───────────────────────────────────────────────────────
+function renderPosts() {
+  const tbody = document.getElementById('posts-body');
+  if (!cache.posts.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="emoji">📝</div><p>No posts yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cache.posts.map(p => `
+    <tr>
+      <td class="truncate">${esc(p.caption || p.body || '(no text)')}</td>
+      <td>${visBadge(p.visibility)}</td>
+      <td>${p.like_count ?? p.likes ?? 0}</td>
+      <td>${fmtDate(p.created_at)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('posts','${p.id}')">🗑 Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function submitPost() {
+  const caption    = document.getElementById('np-caption').value.trim();
+  const image_url  = document.getElementById('np-image').value.trim();
+  const visibility = document.getElementById('np-visibility').value;
+  if (!caption) { showToast('Caption is required', 'error'); return; }
+
+  try {
+    await api('POST', '/posts', { caption, visibility, ...(image_url && { image_url }) });
+    showToast('Post published!', 'success');
+    closeModal('new-post');
+    document.getElementById('np-caption').value = '';
+    document.getElementById('np-image').value = '';
+    await loadPosts();
+    renderDashboard();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ── Announcements ───────────────────────────────────────────────
+function renderAnnouncements() {
+  const tbody = document.getElementById('announcements-body');
+  if (!cache.announcements.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="emoji">📢</div><p>No announcements yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cache.announcements.map(a => `
+    <tr>
+      <td class="truncate">${esc(a.title || '(untitled)')}</td>
+      <td class="truncate" style="max-width:180px;color:var(--text-muted)">${esc(a.body || '')}</td>
+      <td>${scopeBadge(a.scope)}</td>
+      <td>${fmtDate(a.created_at)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('announcements','${a.id}')">🗑 Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function updateScopeFields() {
+  const scope = document.getElementById('na-scope').value;
+  document.getElementById('na-district-row').classList.toggle('hidden', scope !== 'district');
+  document.getElementById('na-chapter-row').classList.toggle('hidden', scope !== 'chapter');
+}
+
+async function submitAnnouncement() {
+  const title    = document.getElementById('na-title').value.trim();
+  const body     = document.getElementById('na-body').value.trim();
+  const scope    = document.getElementById('na-scope').value;
+  const priority = document.getElementById('na-priority').value;
+  const district_id = document.getElementById('na-district').value.trim() || null;
+  const chapter_id  = document.getElementById('na-chapter').value.trim() || null;
+
+  if (!title || !body) { showToast('Title and body are required', 'error'); return; }
+  if (scope === 'district' && !district_id) { showToast('District ID required for district scope', 'error'); return; }
+  if (scope === 'chapter' && !chapter_id)   { showToast('Chapter ID required for chapter scope', 'error'); return; }
+
+  const payload = { title, body, scope, priority };
+  if (district_id) payload.district_id = district_id;
+  if (chapter_id)  payload.chapter_id  = chapter_id;
+
+  try {
+    await api('POST', '/announcements', payload);
+    showToast('Announcement sent!', 'success');
+    closeModal('new-announcement');
+    document.getElementById('na-title').value = '';
+    document.getElementById('na-body').value  = '';
+    await loadAnnouncements();
+    renderDashboard();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ── Events ──────────────────────────────────────────────────────
+function renderEvents() {
+  const tbody = document.getElementById('events-body');
+  if (!cache.events.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="emoji">📅</div><p>No events yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cache.events.map(e => `
+    <tr>
+      <td class="truncate">${esc(e.title || '(untitled)')}</td>
+      <td class="truncate">${esc(e.location || '—')}</td>
+      <td>${fmtDateTime(e.start_at)}</td>
+      <td>${visBadge(e.visibility)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('events','${e.id}')">🗑 Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function submitEvent() {
+  const title      = document.getElementById('ne-title').value.trim();
+  const description= document.getElementById('ne-desc').value.trim();
+  const start_at   = document.getElementById('ne-start').value;
+  const end_at     = document.getElementById('ne-end').value;
+  const location   = document.getElementById('ne-location').value.trim();
+  const category   = document.getElementById('ne-category').value;
+  const visibility = document.getElementById('ne-visibility').value;
+
+  if (!title)    { showToast('Title is required', 'error'); return; }
+  if (!start_at) { showToast('Start date/time is required', 'error'); return; }
+
+  const payload = { title, category, visibility, start_at: new Date(start_at).toISOString() };
+  if (description) payload.description = description;
+  if (end_at)      payload.end_at      = new Date(end_at).toISOString();
+  if (location)    payload.location    = location;
+
+  try {
+    await api('POST', '/events', payload);
+    showToast('Event created!', 'success');
+    closeModal('new-event');
+    ['ne-title','ne-desc','ne-start','ne-end','ne-location'].forEach(id => document.getElementById(id).value = '');
+    await loadEvents();
+    renderDashboard();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ── Hub ─────────────────────────────────────────────────────────
+function renderHub() {
+  const tbody = document.getElementById('hub-body');
+  if (!cache.hub.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="emoji">📚</div><p>No hub items yet</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cache.hub.map(h => `
+    <tr>
+      <td class="truncate">${esc(h.title || '(untitled)')}</td>
+      <td><span class="badge badge-gray">${esc(h.category || '—')}</span></td>
+      <td class="truncate" style="max-width:180px">
+        ${h.url ? `<a href="${esc(h.url)}" target="_blank" style="color:var(--info);font-size:13px">↗ Link</a>` : '—'}
+      </td>
+      <td>${visBadge(h.visibility)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="deleteItem('hub','${h.id}')">🗑 Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function submitHub() {
+  const title      = document.getElementById('nh-title').value.trim();
+  const description= document.getElementById('nh-desc').value.trim();
+  const url        = document.getElementById('nh-url').value.trim();
+  const category   = document.getElementById('nh-category').value;
+  const visibility = document.getElementById('nh-visibility').value;
+
+  if (!title) { showToast('Title is required', 'error'); return; }
+
+  const payload = { title, category, visibility };
+  if (description) payload.description = description;
+  if (url)         payload.url         = url;
+
+  try {
+    await api('POST', '/hub', payload);
+    showToast('Resource added!', 'success');
+    closeModal('new-hub');
+    ['nh-title','nh-desc','nh-url'].forEach(id => document.getElementById(id).value = '');
+    await loadHub();
+    renderDashboard();
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+}
+
+// ── Users ───────────────────────────────────────────────────────
+function renderUsers() {
+  const tbody = document.getElementById('users-body');
+  if (!cache.users.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="emoji">👥</div><p>No users found</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = cache.users.map(u => `
+    <tr>
+      <td>${esc(u.display_name || '—')}</td>
+      <td>${esc(u.email || '—')}</td>
+      <td>${roleBadge(u.role)}</td>
+      <td>${esc(u.chapter_id || '—')}</td>
+      <td>${fmtDate(u.created_at)}</td>
+    </tr>`).join('');
+}
+
+// ── Delete ──────────────────────────────────────────────────────
+const ENDPOINT_MAP = { posts: '/posts', announcements: '/announcements', events: '/events', hub: '/hub' };
+
+async function deleteItem(type, id) {
+  if (!confirm('Delete this item? This cannot be undone.')) return;
+  const path = ENDPOINT_MAP[type];
+  if (!path) return;
+  try {
+    await api('DELETE', `${path}/${id}`);
+    showToast('Deleted successfully', 'success');
+    if (type === 'posts')         { await loadPosts(); }
+    if (type === 'announcements') { await loadAnnouncements(); }
+    if (type === 'events')        { await loadEvents(); }
+    if (type === 'hub')           { await loadHub(); }
+    renderDashboard();
+  } catch(e) { showToast('Delete failed: ' + e.message, 'error'); }
+}
+
+// ── Invite codes ─────────────────────────────────────────────────
+async function generateInvite() {
+  const btn = document.getElementById('gen-invite-btn');
+  btn.innerHTML = '<span class="spinner"></span> Generating…';
+  btn.disabled = true;
+  try {
+    const d = await api('POST', '/advisor/invite', { expires_in_days: 7 });
+    const invite = d.invite || d;
+    const code = invite.code || invite.raw_code || '—';
+    document.getElementById('invite-code-display').textContent = code;
+    const exp = invite.expires_at ? `Expires ${fmtDate(invite.expires_at)}` : 'Valid for 7 days';
+    document.getElementById('invite-expires').textContent = exp;
+    document.getElementById('invite-result').classList.remove('hidden');
+    showToast('Invite code generated!', 'success');
+  } catch(e) { showToast('Error: ' + e.message, 'error'); }
+  finally {
+    btn.innerHTML = '🔑 Generate Code';
+    btn.disabled = false;
+  }
+}
+
+function copyInviteCode() {
+  const code = document.getElementById('invite-code-display').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('Copied to clipboard!', 'success'));
+}
+
+// ── Navigation ──────────────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', posts: 'Posts', announcements: 'Announcements',
+  events: 'Events', hub: 'Hub Items', users: 'Members', invites: 'Invite Codes'
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  const page = document.getElementById(`page-${name}`);
+  if (page) page.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.onclick && n.onclick.toString().includes(`'${name}'`)) n.classList.add('active');
+  });
+
+  document.getElementById('page-title').textContent = PAGE_TITLES[name] || name;
+}
+
+// ── Modal helpers ────────────────────────────────────────────────
+function openModal(name) {
+  document.getElementById(`modal-${name}`).classList.add('open');
+}
+function closeModal(name) {
+  document.getElementById(`modal-${name}`).classList.remove('open');
+}
+
+// Close on overlay click
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+// ── Toast ────────────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast${type === 'error' ? ' error' : type === 'warning' ? ' warning' : ''}`;
+  el.innerHTML = `<span>${type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕'}</span> ${esc(msg)}`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── HTML escape ──────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
