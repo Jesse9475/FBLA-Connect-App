@@ -1123,19 +1123,8 @@ class _SignupScreenState extends State<SignupScreen> {
             .fadeIn(duration: 300.ms, curve: Curves.easeOut)
             .slideY(begin: 0.08, end: 0, duration: 300.ms, curve: Curves.easeOut),
 
-        if (kDebugMode) ...[
-          const SizedBox(height: FblaSpacing.md),
-          _RoleCard(
-            title: 'Admin (Debug)',
-            subtitle: 'Test admin access with code FBLAADMIN2026.',
-            icon: Icons.admin_panel_settings_outlined,
-            color: Colors.deepOrange,
-            onTap: () => _selectRole('admin'),
-          )
-              .animate(delay: 120.ms)
-              .fadeIn(duration: 300.ms, curve: Curves.easeOut)
-              .slideY(begin: 0.08, end: 0, duration: 300.ms, curve: Curves.easeOut),
-        ],
+        // Admin role removed from signup — admin access is granted
+        // server-side only, never through the client UI.
 
         const SizedBox(height: FblaSpacing.xxl),
       ],
