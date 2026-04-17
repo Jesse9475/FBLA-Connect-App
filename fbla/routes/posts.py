@@ -39,10 +39,11 @@ def _visible_posts_query(supabase, auth_user):
     if user_id and is_valid_uuid(user_id):
         # Always see your own posts
         filters.append(f"user_id.eq.{user_id}")
-    if chapter_id and is_valid_uuid(chapter_id):
+    if chapter_id:
         # Posts scoped to this exact chapter
+        # Note: chapter_id may be a text code like "WA-154", not a UUID
         filters.append(f"chapter_id.eq.{chapter_id}")
-    if district_id and is_valid_uuid(district_id):
+    if district_id:
         # District-wide posts (no chapter restriction) for district advisors
         filters.append(
             f"and(district_id.eq.{district_id},chapter_id.is.null)"
